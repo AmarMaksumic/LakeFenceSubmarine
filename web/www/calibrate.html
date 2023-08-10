@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="/spectre.min.css">
+  <link rel="stylesheet" href="/spectre-exp.min.css">
+  <link rel="stylesheet" href="/spectre-icons.min.css">
+
+  <script src="/vue.js"></script>
+  <script src="/jquery-3.1.1.min.js"></script>
+  <title>Jetson Calibrate</title>
+</head>
+
+<body>
+
+
+  <script type="text/x-template" id="main-template">
+
+
+
+  <div class="off-canvas off-canvas-sidebar-show" style="height:100vh;">
+    <!-- off-screen toggle button -->
+    <a class="off-canvas-toggle btn btn-primary btn-action" href="#sidebar-id">
+      <i class="icon icon-menu"></i>
+    </a>
+
+    <div id="sidebar-id" class="active off-canvas-sidebar">
+      <!-- off-screen sidebar -->
+      <div style="padding:20px">
+
+
+        <!-- form switch control -->
+        <div class="form-group">
+          <label class="form-switch">
+            <input type="checkbox" :checked="enable_calibration_feed" @change="toggleCalibrationFeed">
+            <i class="form-icon"></i> Calibration Feed
+          </label>
+        </div>
+      </div>
+
+    </div>
+
+    <a class="off-canvas-overlay" href="#close"></a>
+
+    <div class="off-canvas-content">
+        <div class="columns">
+          <div class="column col-5">
+
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title h5">Camera</div>
+                <div class="card-subtitle text-gray">fps: <span id="actual"></span></div>
+                <ul class="tab tab-block">
+                  <li class="tab-item" :class="{active: selected_profile == color_profile}" v-for="(color_profile, camera_mode) in color_profiles">
+                    <a @click="changeProfile(color_profile)" href="#">{{ camera_mode }}</a>
+                  </li>
+                </ul>
+
+
+              </div>
+              <div class="card-image">
+                <img src="" id="image" class="img-responsive">
+              </div>
+              <div class="card-body">
+                <div class="form-group" v-show="selected_profile  && selected_profile.camera_mode != 'RAW'">
+                  <label class="form-switch">
+                    <input @change="changeApplyMask" v-model="apply_mask" type="checkbox">
+                    <i class="form-icon"></i> Apply Mask
+                  </label>
+                </div>
+              </div>
+              <div class="card-footer">
+              </div>
+            </div>
+
+          </div>
+          <div class="column col-5">
+
+            <div class="panel" v-if="selected_profile && selected_profile.camera_mode != 'RAW'" >
+                <div class="panel-header text-center">
+                  <div class="panel-title h5 mt-10">{{ selected_profile.camera_mode }}</div>
+                </div>
+
+                <!-- <nav class="panel-nav">
+                  <ul class="tab tab-block">
+                    <li class="tab-item" :class="{active: color_mode == selected_color_mode}"  v-for="color_mode in color_modes">
+                      <a @click="changeColorMode(color_mode)" href="#">{{ color_mode }}</a>
+                    </li>
+                  </ul>
+
+                </nav> -->
+                <div class="panel-body" style="min-height:400px;">
+
+                  <div class="columns" v-if="selected_profile">
+                    <div class="column col-1"></div>
+                    <div class="column col-5">
+                      <ul class="menu">
+                        <!-- menu header text -->
+                        <li class="divider" data-content="RGB">
+                        </li>
+                        <!-- menu divider -->
+                        <li class="divider"></li>
+                        <!-- menu item with badge -->
+                        <li class="menu-item">
+                          <a @click="changeColorMode('rgb')" href="#">R</a>
+                          <div class="menu-badge">
+                            {{ selected_profile.rgb.r.min }} - {{ selected_profile.rgb.r.max }}
+                          </div>
+                        </li>
+                        <li class="menu-item">
+                          <a  @click="changeColorMode('rgb')" href="#">G</a>
+                          <div class="menu-badge">
+                            {{ selected_profile.rgb.g.min }} - {{ selected_profile.rgb.g.max }}
+                          </div>
+                        </li>
+                        <li class="menu-item">
+                          <a  @click="changeColorMode('rgb')" href="#">B</a>
+                          <div class="menu-badge">
+                            {{ selected_profile.rgb.b.min }} - {{ selected_profile.rgb.b.max }}
+                          </div>
+                        </li>
+                      </ul>
+                    </div>
+                    <div class="column col-5">
+                      <ul class="menu">
+                        <!-- menu header text -->
+                        <li class="divider" data-content="HSV">
+                        </li>
+                        <!-- menu divider -->
+                        <li class="divider"></li>
+                        <!-- menu item with badge -->
+                        <li class="menu-item">
+                          <a  @click="changeColorMode('hsv')" href="#">H</a>
+                          <div class="menu-badge">
+                            {{ selected_profile.hsv.h.min }} - {{ selected_profile.hsv.h.max }}
+                          </div>
+                        </li>
+                        <li class="menu-item">
+                          <a  @click="changeColorMode('hsv')" href="#">S</a>
+                          <div class="menu-badge">
+                            {{ selected_profile.hsv.s.min }} - {{ selected_profile.hsv.s.max }}
+                          </div>
+                        </li>
+                        <li class="menu-item">
+                          <a  @click="changeColorMode('hsv')" href="#">V</a>
+                          <div class="menu-badge">
+                            {{ selected_profile.hsv.v.min }} - {{ selected_profile.hsv.v.max }}
+                          </div>
+                        </li>
+                      </ul>
+                    </div>
+
+                  </div>
+
+                <!-- form switch control -->
+                <div class="columns">
+                  <div class="column col-1"></div>
+                  <div class="column col-10">
+                    <table  class="table" style="width:90%" >
+                      <tbody>
+                		  	<tr v-for="value in values">
+                          <td>{{ value.name }}</td>
+                  				<td>{{ value.range.min }} - {{ value.range.max }} </td>
+                  				<td>
+                  					<input class="slider tooltip"
+                  						   v-model="value.range.min"
+                  						   @change="updateColors"
+                  						   type="range" min="0" max="255">
+                  					<input class="slider tooltip"
+                  						   v-model="value.range.max"
+                  						   @change="updateColors"
+                  						   type="range" min="0" max="255">
+                  				</td>
+              			     </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+                <div class="panel-footer">
+                  <button @click="saveProfile" class="btn btn-primary btn-block">Save</button>
+                  <button @click="resetProfile" class="btn btn-block">Reset</button>
+                </div>
+              </div>
+          </div>
+      </div>
+    </div>
+
+  </div>
+
+
+
+
+</script>
+
+
+  <div id="app"></div>
+
+  <script src="/ws_streamer.js"></script>
+  <script src="/calibrate.js"></script>
+
+</body>
+
+</html>

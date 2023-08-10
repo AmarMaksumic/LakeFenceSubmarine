@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="/spectre.min.css">
+  <link rel="stylesheet" href="/spectre-exp.min.css">
+  <link rel="stylesheet" href="/spectre-icons.min.css">
+
+  <script src="/vue.js"></script>
+  <script src="/jquery-3.1.1.min.js"></script>
+  <title>Jetson Cameras</title>
+</head>
+
+<body>
+
+
+  <script type="text/x-template" id="main-template">
+
+
+
+  <div class="off-canvas off-canvas-sidebar-show" style="height:100vh;">
+    <!-- off-screen toggle button -->
+    <a class="off-canvas-toggle btn btn-primary btn-action" href="#sidebar-id">
+      <i class="icon icon-menu"></i>
+    </a>
+
+    <div id="sidebar-id" class="active off-canvas-sidebar">
+      <!-- off-screen sidebar -->
+      <div style="padding:20px">
+
+        <!-- form switch control -->
+        <div class="form-group">
+          <label class="form-switch">
+            <input type="checkbox" :checked="enable_camera_feed" @change="toggleCameraFeed">
+            <i class="form-icon"></i> Camera Feed
+          </label>
+        </div>
+
+
+
+        <!-- form switch control -->
+        <div class="form-group">
+          <label class="form-switch">
+            <input type="checkbox" :checked="enable_processing_feed" @change="toggleProcessingFeed">
+            <i class="form-icon"></i> Processing Feed
+          </label>
+        </div>
+
+
+      </div>
+
+    </div>
+
+    <a class="off-canvas-overlay" href="#close"></a>
+
+    <div class="off-canvas-content">
+        <div class="columns">
+          <div class="column col-6">
+            <img style="border:1px solid black" src="" id="wide_raw_image" class="img-responsive">
+          </div>
+          <div class="column col-6">
+            <img style="border:1px solid black" src="" id="far_raw_image" class="img-responsive">
+          </div>
+      </div>
+      <img src="" id="processed_image" class="img-responsive">
+
+    </div>
+
+  </div>
+
+
+
+
+</script>
+
+
+  <div id="app"></div>
+  <script src="/ws_streamer.js"></script>
+
+  <script>
+
+    new Vue({
+      el: '#app',
+      template: '#main-template',
+      data: {
+        enable_processing_feed: false,
+        enable_camera_feed: false,
+        enable_calibration_feed: false,
+      },
+      mounted: function () {
+        var self = this;
+        self.controls_ws = new_web_socket('/dashboard/ws');
+        self.controls_ws.onmessage = function (msg) {
+          var data = JSON.parse(msg.data)
+          console.log(data);
+          if (data.hasOwnProperty('enable_camera_feed')) {
+            self.enable_camera_feed = data.enable_camera_feed
+          }
+          if (data.hasOwnProperty('enable_processing_feed')) {
+            self.enable_processing_feed = data.enable_processing_feed
+          }
+          if (data.hasOwnProperty('enable_calibration_feed')) {
+            self.enable_calibration_feed = data.enable_calibration_feed
+          }
+        }
+        start_camera_stream("/processed/ws", "processed_image");
+        start_camera_stream("/far_camera/ws", "far_raw_image");
+        start_camera_stream("/wide_camera/ws", "wide_raw_image");
+
+
+
+      },
+      methods: {
+        toggleCameraFeed: function () {
+          this.controls_ws.send(JSON.stringify({
+            request_type: 'contols',
+            enable_camera_feed: !this.enable_camera_feed
+          }))
+          this.showImage(this.enable_camera_feed, "wide_raw_image")
+          this.showImage(this.enable_camera_feed, "far_raw_image")
+
+
+        },
+        toggleProcessingFeed: function () {
+          this.controls_ws.send(JSON.stringify({
+            request_type: 'contols',
+            enable_processing_feed: !this.enable_processing_feed
+          }))
+          this.showImage(this.enable_processing_feed, "processed_image")
+
+        },
+
+
+        showImage: function (enabled, image) {
+          var frame = document.getElementById(image)
+          if (!enabled) {
+            console.log("visible");
+            frame.style.visibility = 'visible';
+          }
+          else {
+            console.log("invisible");
+            frame.style.visibility = 'hidden';
+          }
+        }
+
+      }
+    });
+  </script>
+
+</body>
+
+</html>

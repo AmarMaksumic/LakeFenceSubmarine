@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+
+	<link rel="stylesheet" href="/spectre.min.css">
+	<link rel="stylesheet" href="/spectre-exp.min.css">
+	<link rel="stylesheet" href="/spectre-icons.min.css">
+
+	<style>
+		body {
+			background-color: black;
+			color: white;
+		}
+
+		.cosmic {
+			height: 100vh;
+			background-image: radial-gradient(circle farthest-corner at 0.5% 97.2%, #2fad5b 0%, #93c4ff 100.2%);
+		}
+
+		.vid {
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			z-index: -1;
+		}
+
+		.vidContain {
+			width: 300px;
+			height: 200px;
+			position: relative;
+			display: inline-block;
+			margin: 10px;
+		}
+
+		.target {
+			background: #00000091
+		}
+
+		.vector {
+			background: url(tunnel.gif) no-repeat center center;
+			-webkit-background-size: cover;
+			-moz-background-size: cover;
+			-o-background-size: cover;
+			background-size: cover;
+		}
+	</style>
+</head>
+
+<body>
+	<script src="/jquery-3.1.1.min.js"></script>
+
+	<!-- development version, includes helpful console warnings -->
+	<script src="/vue.js"></script>
+
+
+	<script type="text/x-template" id="main-template">
+
+		<div class="container" >
+
+			<div class="columns">
+				<div class="column col-3">
+				</div>
+				<div class="column col-6">
+					<center>
+						<div class="form-group">
+							<label class="form-radio form-inline">
+								<input type="radio" v-model="controls.camera_mode" value="OFF" name="mode" @click="update"><i class="form-icon"></i> OFF
+						  </label>
+						  <label class="form-radio form-inline">
+								<input type="radio" v-model="controls.camera_mode" name="mode"value="RAW" @click="update"><i class="form-icon"></i> RAW
+						  </label>
+						  <label class="form-radio form-inline">
+								<input type="radio" v-model="controls.camera_mode" value="BAY" name="mode"  @click="update"><i class="form-icon"></i> BAY
+						  </label>
+						  	<label class="form-radio form-inline">
+							<input type="radio" name="mode" v-model="controls.camera_mode" value="BALL" @click="update"><i class="form-icon"></i> BALL
+						  </label>
+						  <label class="form-radio form-inline">
+								<input type="radio" name="mode" v-model="controls.camera_mode" value="HEXAGON" @click="update"><i class="form-icon"></i> HEX GOAL
+						  </label>
+						</div>
+					</center>
+				</div>
+			</div>
+
+		</div>
+	</div>
+  </div>
+
+	</script>
+
+	<header class="navbar">
+		<section class="navbar-section">
+		</section>
+		<section class="navbar-center">
+			<a href="" class="btn">Tracking</a>
+			<a href="/calibrate/" class="btn btn-primary">Calibrate</a>
+			<a href="/camera/" class="btn btn-primary">Cameras</a>
+			<!-- centered logo or brand -->
+		</section>
+		<section class="navbar-section">
+		</section>
+	</header>
+
+	<div class="columns vector">
+		<div class="column col-10 col-mx-auto">
+			<center>
+				<canvas id="canvas" class="target" width="640" height="480" style="border:1px solid black"></canvas>
+			</center>
+		</div>
+	</div>
+
+	<div id="app"></div>
+
+	</div>
+	<script src="/ws_streamer.js"></script>
+	<script src="/socket.js"></script>
+	<script src="/app.js"></script>
+	<script src="/tracker.js"></script>
+
+</body>
+
+</html>
